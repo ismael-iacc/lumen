@@ -1,0 +1,96 @@
+# =============================================================================
+# Azure DevOps Pipeline — Lumen SAST Security Scan
+#
+# Runs on a self-hosted agent pool (see azure-agent/ for agent setup).
+# Downloads lumen.sh from GitHub to dispatch the scan, wait for results,
+# and download the SARIF report. No local files needed in the target repo.
+#
+# Required Pipeline Variables (Azure DevOps > Pipelines > Variables):
+#   SCAN_API_URL       - Lumen API base URL (e.g., http://lumen-api:8000/api/v1)
+#   SCAN_API_USERNAME  - API service account username
+#   SCAN_API_PASSWORD  - API service account password (mark as secret)
+#
+# Optional:
+#   SCAN_LANGUAGE      - Language to analyze (default: python)
+#   SCAN_TIMEOUT       - Max wait seconds (default: 900)
+#   SCAN_POLL_INTERVAL - Seconds between polls (default: 15)
+#   SCAN_AGENT_POOL    - Self-hosted pool name (default: Default)
+# =============================================================================
+
+trigger:
+  - main
+  - develop
+
+# ── Self-hosted agent pool ──
+pool:
+  name: $(SCAN_AGENT_POOL)
+  demands:
+    - Agent.OS -equals Linux
+
+variables:
+  SCAN_LANGUAGE: 'python'
+  SCAN_TIMEOUT: '900'
+  SCAN_POLL_INTERVAL: '15'
+  SCAN_AGENT_POOL: 'Default'
+  LUMEN_SCRIPT_URL: 'https://raw.githubusercontent.com/ismael-iacc/lumen/refs/heads/main/lumen.sh'
+
+stages:
+  - stage: SecurityScan
+    displayName: 'Lumen SAST Scan'
+    jobs:
+      - job: RunScan
+        displayName: 'Submit & Analyze Code'
+        timeoutInMinutes: 30
+        steps:
+          - checkout: self
+            displayName: 'Checkout source code'
+
+          # ── Download and run lumen.sh ──
+          - script: |
+              set -euo pipefail
+
+              echo "[*] Downloading lumen.sh..."
+              curl -sSL "$(LUMEN_SCRIPT_URL)" -o /tmp/lumen.sh
+              chmod +x /tmp/lumen.sh
+
+              /tmp/lumen.sh \
+                --repo "$(Build.Repository.Uri)" \
+                --branch "$(Build.SourceBranchName)" \
+                --language "$(SCAN_LANGUAGE)" \
+                --wait \
+                --timeout "$(SCAN_TIMEOUT)" \
+                --poll-interval "$(SCAN_POLL_INTERVAL)" \
+                --output "$(Build.ArtifactStagingDirectory)/scan-report.sarif"
+
+              EXIT_CODE=$?
+              if [ $EXIT_CODE -eq 2 ]; then
+                echo "##vso[task.logissue type=error]Scan timed out."
+              elif [ $EXIT_CODE -eq 3 ]; then
+                echo "##vso[task.logissue type=warning]Scan completed with engine errors."
+              elif [ $EXIT_CODE -ne 0 ]; then
+                echo "##vso[task.logissue type=error]lumen.sh failed (exit $EXIT_CODE)."
+              fi
+              exit $EXIT_CODE
+            displayName: 'Run Lumen security scan'
+            env:
+              SCAN_API_URL: $(SCAN_API_URL)
+              SCAN_API_USERNAME: $(SCAN_API_USERNAME)
+              SCAN_API_PASSWORD: $(SCAN_API_PASSWORD)
+
+          # ── Publish SARIF as build artifact ──
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish SARIF report'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/scan-report.sarif'
+              ArtifactName: 'SecurityScanReport'
+              publishLocation: 'Container'
+            condition: always()
+
+          # ── Publish to CodeAnalysisLogs (SARIF Scans Tab extension) ──
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish SARIF to CodeAnalysisLogs'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/scan-report.sarif'
+              ArtifactName: 'CodeAnalysisLogs'
+              publishLocation: 'Container'
+            condition: always()
