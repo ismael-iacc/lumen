@@ -157,7 +157,7 @@ echo ""
 
 # ── Show what was generated ──
 echo "╔══════════════════════════════════════════════════════════════════╗"
-echo "║                  GENERATED CONFIGURATION                     ls    ║"
+echo "║                  GENERATED CONFIGURATION                         ║"
 echo "╠══════════════════════════════════════════════════════════════════╣"
 echo "║"
 echo "║  PostgreSQL"
