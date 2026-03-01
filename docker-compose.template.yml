@@ -1,0 +1,96 @@
+# =============================================================================
+# Lumen — Security Scanning Platform
+# Docker Compose template — DO NOT use directly.
+# Run lumen-setup.sh to generate docker-compose.yml with secure credentials.
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: lumen-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${LUMEN_DB_USER}
+      POSTGRES_PASSWORD: ${LUMEN_DB_PASSWORD}
+      POSTGRES_DB: ${LUMEN_DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LUMEN_DB_USER}"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    volumes:
+      - lumen_pgdata:/var/lib/postgresql/data
+    networks:
+      - lumen-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: lumen-rabbitmq
+    ports:
+      - "${LUMEN_MQ_MGMT_PORT:-15672}:15672"
+      - "${LUMEN_MQ_PORT:-5672}:5672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_port_listener 5672"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+    environment:
+      RABBITMQ_DEFAULT_USER: ${LUMEN_MQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${LUMEN_MQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: /
+    networks:
+      - lumen-net
+
+  api-gateway:
+    image: ghcr.io/ismael-iacc/lumen/api-gateway:latest
+    container_name: lumen-api
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - DEFAULT_USERNAME=${LUMEN_API_USER}
+      - DEFAULT_PASSWORD=${LUMEN_API_PASSWORD}
+      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@lumen-rabbitmq:5672/
+      - RABBITMQ_EXCHANGE=${LUMEN_EXCHANGE}
+      - DATABASE_URL=postgresql+asyncpg://${LUMEN_DB_USER}:${LUMEN_DB_PASSWORD}@lumen-postgres:5432/${LUMEN_DB_NAME}
+      - JWT_SECRET_KEY=${LUMEN_JWT_SECRET}
+      - JWT_ALGORITHM=HS256
+      - JWT_AUDIENCE=lumen
+      - JWT_ISSUER=lumen
+      - JWT_EXPIRATION=180
+    ports:
+      - "${LUMEN_API_PORT:-8000}:8000"
+    networks:
+      - lumen-net
+
+  agent-codeql:
+    image: ghcr.io/ismael-iacc/lumen/agent-codeql:latest
+    container_name: lumen-agent-codeql
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      api-gateway:
+        condition: service_started
+    environment:
+      - AGENT_ID=codeql
+      - AGENT_CATEGORY=sast
+      - AGENT_ENGINE=codeql
+      - API_URL=http://lumen-api:8000/api/v1
+      - API_USERNAME=${LUMEN_API_USER}
+      - API_PASSWORD=${LUMEN_API_PASSWORD}
+      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@lumen-rabbitmq:5672/
+      - RABBITMQ_EXCHANGE=${LUMEN_EXCHANGE}
+      - MAX_CONCURRENCY=1
+      - LOGLEVEL=info
+    restart: on-failure
+    networks:
+      - lumen-net
+
+volumes:
+  lumen_pgdata:
+
+networks:
+  lumen-net:
+    driver: bridge
