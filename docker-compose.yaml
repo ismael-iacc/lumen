@@ -52,9 +52,9 @@ services:
     environment:
       - DEFAULT_USERNAME=${LUMEN_API_USER}
       - DEFAULT_PASSWORD=${LUMEN_API_PASSWORD}
-      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@lumen-rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@rabbitmq:5672/
       - RABBITMQ_EXCHANGE=${LUMEN_EXCHANGE}
-      - DATABASE_URL=postgresql+asyncpg://${LUMEN_DB_USER}:${LUMEN_DB_PASSWORD}@lumen-postgres:5432/${LUMEN_DB_NAME}
+      - DATABASE_URL=postgresql+asyncpg://${LUMEN_DB_USER}:${LUMEN_DB_PASSWORD}@postgres:5432/${LUMEN_DB_NAME}
       - JWT_SECRET_KEY=${LUMEN_JWT_SECRET}
       - JWT_ALGORITHM=HS256
       - JWT_AUDIENCE=lumen
@@ -77,10 +77,10 @@ services:
       - AGENT_ID=codeql
       - AGENT_CATEGORY=sast
       - AGENT_ENGINE=codeql
-      - API_URL=http://lumen-api:8000/api/v1
+      - API_URL=http://api-gateway:8000/api/v1
       - API_USERNAME=${LUMEN_API_USER}
       - API_PASSWORD=${LUMEN_API_PASSWORD}
-      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@lumen-rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${LUMEN_MQ_USER}:${LUMEN_MQ_PASSWORD}@rabbitmq:5672/
       - RABBITMQ_EXCHANGE=${LUMEN_EXCHANGE}
       - MAX_CONCURRENCY=1
       - LOGLEVEL=info

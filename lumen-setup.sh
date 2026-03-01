@@ -51,7 +51,7 @@ rand_string() {
 rand_password() {
   # Generate a password with mixed chars
   local len="${1:-24}"
-  LC_ALL=C tr -dc 'A-Za-z0-9!@#%&_+=' </dev/urandom 2>/dev/null | head -c "$len" || \
+  LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom 2>/dev/null | head -c "$len" || \
   python3 -c "import secrets; print(secrets.token_urlsafe($len)[:$len])" 2>/dev/null
 }
 
@@ -109,7 +109,7 @@ echo "[OK] Template downloaded."
 # ── Generate credentials ──
 echo "[*] Generating secure credentials..."
 
-LUMEN_DB_USER="lumen_db"
+LUMEN_DB_USER="lumen"
 LUMEN_DB_NAME="lumen"
 LUMEN_DB_PASSWORD="$(rand_password 24)"
 LUMEN_MQ_USER="lumen_mq"
