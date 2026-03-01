@@ -99,9 +99,9 @@ cd "$INSTALL_DIR"
 
 # ── Download template ──
 echo "[*] Downloading docker-compose template..."
-curl -sSL "${GITHUB_RAW}/docker-compose.template.yml" -o docker-compose.yaml || {
+curl -sSL "${GITHUB_RAW}/docker-compose.yaml" -o docker-compose.yaml || {
   echo "[ERROR] Failed to download template from GitHub."
-  echo "        URL: ${GITHUB_RAW}/docker-compose.template.yml"
+  echo "        URL: ${GITHUB_RAW}/docker-compose.yaml"
   exit 1
 }
 echo "[OK] Template downloaded."
@@ -157,7 +157,7 @@ echo ""
 
 # ── Show what was generated ──
 echo "╔══════════════════════════════════════════════════════════════════╗"
-echo "║                  GENERATED CONFIGURATION                         ║"
+echo "║                  GENERATED CONFIGURATION                     ls    ║"
 echo "╠══════════════════════════════════════════════════════════════════╣"
 echo "║"
 echo "║  PostgreSQL"
