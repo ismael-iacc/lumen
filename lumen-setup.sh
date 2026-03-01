@@ -87,7 +87,7 @@ echo ""
 # ── Clean ──
 if [[ "$CLEAN" == true && -d "$INSTALL_DIR" ]]; then
   echo "[*] Cleaning existing installation at ${INSTALL_DIR}..."
-  docker compose -f "$INSTALL_DIR/docker-compose.yml" down -v --remove-orphans 2>/dev/null || true
+  docker compose -f "$INSTALL_DIR/docker-compose.yaml" down -v --remove-orphans 2>/dev/null || true
   rm -rf "$INSTALL_DIR"
   echo "[OK] Cleaned."
   echo ""
@@ -99,7 +99,7 @@ cd "$INSTALL_DIR"
 
 # ── Download template ──
 echo "[*] Downloading docker-compose template..."
-curl -sSL "${GITHUB_RAW}/docker-compose.template.yml" -o docker-compose.yml || {
+curl -sSL "${GITHUB_RAW}/docker-compose.template.yml" -o docker-compose.yaml || {
   echo "[ERROR] Failed to download template from GitHub."
   echo "        URL: ${GITHUB_RAW}/docker-compose.template.yml"
   exit 1
@@ -213,7 +213,7 @@ echo ""
 
 if [[ $ELAPSED -ge $MAX_WAIT ]]; then
   echo "[WARN] API did not respond within ${MAX_WAIT}s."
-  echo "       Check logs: docker compose -f $(pwd)/docker-compose.yml logs"
+  echo "       Check logs: docker compose -f $(pwd)/docker-compose.yaml logs"
   echo "       It may still be starting (CodeQL agent image is large)."
   echo ""
 else
@@ -239,8 +239,8 @@ echo "║    curl -sSL ${GITHUB_RAW}/lumen.sh | bash -s -- \\"
 echo "║      --repo https://github.com/user/repo \\"
 echo "║      --language python --wait --output report.sarif"
 echo "║"
-echo "║  Logs:   docker compose -f $(pwd)/docker-compose.yml logs -f"
-echo "║  Stop:   docker compose -f $(pwd)/docker-compose.yml down"
+echo "║  Logs:   docker compose -f $(pwd)/docker-compose.yaml logs -f"
+echo "║  Stop:   docker compose -f $(pwd)/docker-compose.yaml down"
 echo "║  Reset:  re-run with --clean"
 echo "║"
 echo "╚══════════════════════════════════════════════════════════════════╝"
