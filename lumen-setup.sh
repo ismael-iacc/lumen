@@ -57,8 +57,8 @@ rand_password() {
 
 # ── Banner ──
 echo ""
-echo "  ╦   ╦ ╦╔╦╗╔═╗╔╗╔"
-echo "  ║   ║ ║║║║║╣ ║║║"
+echo "  ╦  ╦ ╦╔╦╗╔═╗╔╗╔"
+echo "  ║  ║ ║║║║║╣ ║║║"
 echo "  ╩═╝╚═╝╩ ╩╚═╝╝╚╝"
 echo "  Security Scanning Platform"
 echo ""
@@ -157,7 +157,7 @@ echo ""
 
 # ── Show what was generated ──
 echo "╔══════════════════════════════════════════════════════════════════╗"
-echo "║                  GENERATED CONFIGURATION                       ║"
+echo "║                  GENERATED CONFIGURATION                         ║"
 echo "╠══════════════════════════════════════════════════════════════════╣"
 echo "║"
 echo "║  PostgreSQL"
